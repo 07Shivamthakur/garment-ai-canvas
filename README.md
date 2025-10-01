@@ -1,73 +1,117 @@
-# Welcome to your Lovable project
+# AI Garment Studio — Pro
 
-## Project info
+Transform design concepts into realistic garment mockups and model try-ons with AI-powered processing.
 
-**URL**: https://lovable.dev/projects/e3db9fc4-0f0a-4cdb-954f-e056d540c799
+## Features
 
-## How can I edit this code?
+- **Flow 1: Design → Garment Mockups** - Transform design images into professional garment mockups (t-shirts, hoodies, sarees, etc.)
+- **Flow 2: Garment → Model Render** - Upload garment photos and get professional model renders
+- **Flow 3: Exact Model Try-On** - Combine specific garments with specific models for personalized visualization
+- **Secure Processing** - All files sent securely via HTTPS to Make.com
+- **Google Drive Integration** - Preview and download results directly from Google Drive
 
-There are several ways of editing your application.
+## Configuration
 
-**Use Lovable**
+### Webhook URL
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e3db9fc4-0f0a-4cdb-954f-e056d540c799) and start prompting.
+Update the webhook URL in `src/lib/config.ts`:
 
-Changes made via Lovable will be committed automatically to this repo.
+```typescript
+export const CONFIG = {
+  WEBHOOK_URL: "YOUR_MAKE_WEBHOOK_URL_HERE",
+  // ... other settings
+};
+```
 
-**Use your preferred IDE**
+### Authentication
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+To change the allowed username and password:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. **Username**: Update `ALLOWED_USERNAME` in `src/lib/config.ts`
 
-Follow these steps:
+2. **Password**: Generate a SHA-256 hash of your password and update `PASSCODE_HASH`:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+```javascript
+// Run this in your browser console to generate a hash:
+async function hashPassword(password) {
+  const buf = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(password)
+  );
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+// Usage:
+hashPassword("your_password_here").then(console.log);
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+Then update `PASSCODE_HASH` in `src/lib/config.ts` with the output.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## Make.com Integration
+
+The app expects the Make.com webhook to return one of these response formats:
+
+### Option 1: Direct Output URL (JSON)
+```json
+{
+  "OutputURL": "https://drive.google.com/file/d/...",
+  "output_url": "https://drive.google.com/file/d/..."
+}
+```
+
+### Option 2: Status URL for Polling (JSON)
+```json
+{
+  "status_url": "https://your-status-endpoint.com/check/123"
+}
+```
+
+The app will poll this URL every 5 seconds until it returns an output URL.
+
+### Option 3: Plain Text URL
+```
+https://drive.google.com/file/d/...
+```
+
+## Development
+
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Deployment
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Deploy to Lovable:
+1. Click the "Publish" button in the Lovable editor
+2. Your app will be live at your custom domain or Lovable subdomain
 
-**Use GitHub Codespaces**
+## Flow Details
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Flow 1: Design → Garment
+- **Required**: Garment Type (text), Design Image (file)
+- **Optional**: Email, Output Format
+- Transforms design concepts into realistic garment mockups
 
-## What technologies are used for this project?
+### Flow 2: Garment → Model Render
+- **Required**: Garment Photo (file)
+- **Optional**: Email, Output Format
+- Generates professional model renders with your garment
 
-This project is built with:
+### Flow 3: Garment + Model → Exact Model Wearing
+- **Required**: Garment Photo (file), Model Photo (file)
+- **Optional**: Email, Output Format
+- Places specific garment on specific model for personalized visualization
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Security
 
-## How can I deploy this project?
+- Password is hashed using SHA-256
+- Session tokens stored in sessionStorage with 120-minute TTL
+- All file uploads sent via HTTPS
+- No sensitive data logged to console
 
-Simply open [Lovable](https://lovable.dev/projects/e3db9fc4-0f0a-4cdb-954f-e056d540c799) and click on Share -> Publish.
+## Support
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+For questions or issues, contact: support@example.com
