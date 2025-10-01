@@ -7,6 +7,7 @@ import { sha256Hex, saveToken, loadToken, clearToken } from "@/lib/auth";
 import { normalizeDriveUrl, driveId } from "@/lib/drive";
 import { CONFIG } from "@/lib/config";
 import { Loader2, Upload, X } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type FlowType = "1" | "2" | "3";
 
@@ -290,12 +291,15 @@ export default function AgentInterface() {
       <div className="sticky top-0 z-10 backdrop-blur-md bg-background/70 border-b border-primary/20">
         <div className="max-w-[1600px] mx-auto px-4 py-3 flex items-center gap-3">
           <div className="font-bold">AI Garment Studio — Pro</div>
-          <div className="ml-auto border border-border rounded-lg px-3 py-1.5 text-sm">
-            {username}
+          <div className="ml-auto flex items-center gap-3">
+            <ThemeToggle />
+            <div className="border border-border rounded-lg px-3 py-1.5 text-sm">
+              {username}
+            </div>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              Sign out
+            </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            Sign out
-          </Button>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Upload, Zap, Shield } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function LandingPage() {
             <h1 className="text-xl font-bold">AI Garment Studio Pro</h1>
           </div>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <Button
               variant="ghost"
               onClick={() => navigate("/agent")}
