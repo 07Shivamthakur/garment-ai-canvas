@@ -18,29 +18,39 @@ export function genToken(len = 16): string {
     .join("");
 }
 
-export interface SessionToken {
-  tok: string;
-  exp: number;
+export interface Session {
+  login_id: string;
+  auth_token: string;
 }
 
-export function saveToken(): SessionToken {
-  const tok = genToken();
+export function saveSession(email: string): Session {
+  const auth_token = genToken(32);
   const exp = Date.now() + CONFIG.TOKEN_TTL_MIN * 60 * 1000;
-  sessionStorage.setItem("ags_tok", tok);
-  sessionStorage.setItem("ags_exp", exp.toString());
-  return { tok, exp };
+  
+  sessionStorage.setItem("auth_ok", "1");
+  sessionStorage.setItem("login_id", email);
+  sessionStorage.setItem("auth_token", auth_token);
+  sessionStorage.setItem("auth_exp", exp.toString());
+  
+  return { login_id: email, auth_token };
 }
 
-export function loadToken(): SessionToken | null {
-  const tok = sessionStorage.getItem("ags_tok");
-  const exp = Number(sessionStorage.getItem("ags_exp") || 0);
-  if (tok && exp > Date.now()) {
-    return { tok, exp };
+export function loadSession(): Session | null {
+  const ok = sessionStorage.getItem("auth_ok") === "1";
+  const exp = Number(sessionStorage.getItem("auth_exp") || 0);
+  
+  if (!ok || Date.now() > exp) {
+    return null;
   }
-  return null;
+  
+  return {
+    login_id: sessionStorage.getItem("login_id") || "",
+    auth_token: sessionStorage.getItem("auth_token") || "",
+  };
 }
 
-export function clearToken(): void {
-  sessionStorage.removeItem("ags_tok");
-  sessionStorage.removeItem("ags_exp");
+export function clearSession(): void {
+  ["auth_ok", "login_id", "auth_token", "auth_exp"].forEach((k) =>
+    sessionStorage.removeItem(k)
+  );
 }

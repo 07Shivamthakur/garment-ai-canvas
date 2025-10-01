@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { sha256Hex, saveToken, loadToken, clearToken } from "@/lib/auth";
+import { loadSession, clearSession } from "@/lib/auth";
 import { normalizeDriveUrl, driveId } from "@/lib/drive";
 import { CONFIG } from "@/lib/config";
 import { Loader2, Upload, X } from "lucide-react";
@@ -17,11 +18,8 @@ interface OutputResult {
 }
 
 export default function AgentInterface() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
   const [loginId, setLoginId] = useState("");
-  const [loginPass, setLoginPass] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [username, setUsername] = useState("");
   const [authToken, setAuthToken] = useState("");
   
   const [flow, setFlow] = useState<FlowType>("1");
@@ -50,37 +48,18 @@ export default function AgentInterface() {
   const lastSubmitRef = useRef(0);
 
   useEffect(() => {
-    const token = loadToken();
-    if (token) {
-      setIsAuthenticated(true);
-      setUsername(CONFIG.ALLOWED_USERNAME);
-      setAuthToken(token.tok);
-    }
-  }, []);
-
-  const handleLogin = async () => {
-    setLoginError("");
-    const okUser = loginId.trim() === CONFIG.ALLOWED_USERNAME;
-    const okPass = (await sha256Hex(loginPass)) === CONFIG.PASSCODE_HASH;
-    
-    if (!(okUser && okPass)) {
-      setLoginError("Password and username do not match");
+    const session = loadSession();
+    if (!session) {
+      navigate("/auth");
       return;
     }
-    
-    const token = saveToken();
-    setIsAuthenticated(true);
-    setUsername(loginId.trim());
-    setAuthToken(token.tok);
-  };
+    setLoginId(session.login_id);
+    setAuthToken(session.auth_token);
+  }, [navigate]);
 
   const handleLogout = () => {
-    clearToken();
-    setIsAuthenticated(false);
-    setUsername("");
-    setAuthToken("");
-    setLoginId("");
-    setLoginPass("");
+    clearSession();
+    navigate("/auth");
   };
 
   const handleFilePreview = (
@@ -137,11 +116,6 @@ export default function AgentInterface() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isAuthenticated) {
-      setLoginError("Password and username do not match");
-      return;
-    }
-    
     const now = Date.now();
     if (now - lastSubmitRef.current < CONFIG.RATE_LIMIT_MS) return;
     lastSubmitRef.current = now;
@@ -152,8 +126,7 @@ export default function AgentInterface() {
     
     const fd = new FormData();
     fd.set("Filter", flow);
-    fd.set("api_key", loginPass);
-    fd.set("login_id", username);
+    fd.set("login_id", loginId);
     fd.set("auth_token", authToken);
     fd.set("Email", email);
     fd.set("OutputFormat", outputFormat);
@@ -244,46 +217,6 @@ export default function AgentInterface() {
     setStatusType("");
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background/95 backdrop-blur-sm z-50">
-        <Card className="w-full max-w-md p-8">
-          <h2 className="text-2xl font-bold mb-6">Sign in</h2>
-          <div className="space-y-4">
-            <div>
-              <Label>Login ID</Label>
-              <Input
-                value={loginId}
-                onChange={(e) => setLoginId(e.target.value)}
-                placeholder="Enter username"
-              />
-            </div>
-            <div>
-              <Label>Password</Label>
-              <Input
-                type="password"
-                value={loginPass}
-                onChange={(e) => setLoginPass(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                placeholder="Enter password"
-              />
-            </div>
-            {loginError && (
-              <p className="text-sm text-destructive">{loginError}</p>
-            )}
-            <div className="flex items-center gap-3">
-              <Button onClick={handleLogin} className="flex-1">
-                Continue
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Authorized users only.
-              </span>
-            </div>
-          </div>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen">
@@ -294,7 +227,7 @@ export default function AgentInterface() {
           <div className="ml-auto flex items-center gap-3">
             <ThemeToggle />
             <div className="border border-border rounded-lg px-3 py-1.5 text-sm">
-              {username}
+              {loginId}
             </div>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               Sign out

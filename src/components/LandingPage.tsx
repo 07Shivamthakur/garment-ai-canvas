@@ -21,12 +21,12 @@ export default function LandingPage() {
             <ThemeToggle />
             <Button
               variant="ghost"
-              onClick={() => navigate("/agent")}
+              onClick={() => navigate("/auth")}
               className="hidden sm:inline-flex"
             >
               Login
             </Button>
-            <Button onClick={() => navigate("/agent")}>
+            <Button onClick={() => navigate("/auth")}>
               Get Started
             </Button>
           </div>
@@ -58,7 +58,7 @@ export default function LandingPage() {
             <Button
               size="lg"
               className="text-lg px-8 h-14"
-              onClick={() => navigate("/agent")}
+              onClick={() => navigate("/auth")}
             >
               Start Now
               <Sparkles className="w-5 h-5 ml-2" />
